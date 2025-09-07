@@ -4,5 +4,5 @@
 
 ## Knowledge Base
 
-[knowledge_base.md](./knowledge_base.md을 참조하여 Knowledge Base를 생성합니다.
+[knowledge_base.md](./knowledge_base.md)을 참조하여 Knowledge Base를 생성합니다.
 
