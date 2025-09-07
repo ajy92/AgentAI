@@ -313,115 +313,7 @@ def translate_text(text):
 
     return msg[msg.find('<result>')+8:len(msg)-9] # remove <result> tag
     
-def check_grammer(text):
-    chat = get_chat(extended_thinking=reasoning_mode)
-
-    if isKorean(text)==True:
-        system = (
-            "다음의 <article> tag안의 문장의 오류를 찾아서 설명하고, 오류가 수정된 문장을 답변 마지막에 추가하여 주세요."
-        )
-    else: 
-        system = (
-            "Here is pieces of article, contained in <article> tags. Find the error in the sentence and explain it, and add the corrected sentence at the end of your answer."
-        )
-        
-    human = "<article>{text}</article>"
-    
-    prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
-    # print('prompt: ', prompt)
-    
-    chain = prompt | chat    
-    try: 
-        result = chain.invoke(
-            {
-                "text": text
-            }
-        )
-        
-        msg = result.content
-        logger.info(f"result of grammer correction: {msg}")
-    except Exception:
-        err_msg = traceback.format_exc()
-        logger.info(f"error message: {err_msg}")       
-        raise Exception ("Not able to request to LLM")
-    
-    return msg
-
 reference_docs = []
-# api key to get weather information in agent
-if aws_access_key and aws_secret_key:
-    secretsmanager = boto3.client(
-        service_name='secretsmanager',
-        region_name=bedrock_region,
-        aws_access_key_id=aws_access_key,
-        aws_secret_access_key=aws_secret_key,
-        aws_session_token=aws_session_token,
-    )
-else:
-    secretsmanager = boto3.client(
-        service_name='secretsmanager',
-        region_name=bedrock_region,
-    )
-
-# api key for weather
-weather_api_key = ""
-try:
-    get_weather_api_secret = secretsmanager.get_secret_value(
-        SecretId=f"openweathermap-{projectName}"
-    )
-    #print('get_weather_api_secret: ', get_weather_api_secret)
-    secret = json.loads(get_weather_api_secret['SecretString'])
-    #print('secret: ', secret)
-    weather_api_key = secret['weather_api_key']
-
-except Exception as e:
-    raise e
-
-# api key to use LangSmith
-langsmith_api_key = ""
-try:
-    get_langsmith_api_secret = secretsmanager.get_secret_value(
-        SecretId=f"langsmithapikey-{projectName}"
-    )
-    #print('get_langsmith_api_secret: ', get_langsmith_api_secret)
-    secret = json.loads(get_langsmith_api_secret['SecretString'])
-    #print('secret: ', secret)
-    langsmith_api_key = secret['langsmith_api_key']
-    langchain_project = secret['langchain_project']
-except Exception as e:
-    raise e
-
-if langsmith_api_key:
-    os.environ["LANGCHAIN_API_KEY"] = langsmith_api_key
-    os.environ["LANGCHAIN_TRACING_V2"] = "true"
-    os.environ["LANGCHAIN_PROJECT"] = langchain_project
-    
-def tavily_search(query, k):
-    docs = []    
-    try:
-        tavily_client = TavilyClient(api_key=utils.tavily_key)
-        response = tavily_client.search(query, max_results=k)
-        # print('tavily response: ', response)
-            
-        for r in response["results"]:
-            name = r.get("title")
-            if name is None:
-                name = 'WWW'
-            
-            docs.append(
-                Document(
-                    page_content=r.get("content"),
-                    metadata={
-                        'name': name,
-                        'url': r.get("url"),
-                        'from': 'tavily'
-                    },
-                )
-            )                   
-    except Exception as e:
-        logger.info(f"Exception: {e}")
-
-    return docs
 
 def isKorean(text):
     # check korean
@@ -529,55 +421,6 @@ def get_parallel_processing_chat(models, selected):
     )        
     
     return chat
-
-def print_doc(i, doc):
-    if len(doc.page_content)>=100:
-        text = doc.page_content[:100]
-    else:
-        text = doc.page_content
-            
-    logger.info(f"{i}: {text}, metadata:{doc.metadata}")
-
-def grade_document_based_on_relevance(conn, question, doc, models, selected):     
-    chat = get_parallel_processing_chat(models, selected)
-    retrieval_grader = get_retrieval_grader(chat)
-    score = retrieval_grader.invoke({"question": question, "document": doc.page_content})
-    # print(f"score: {score}")
-    
-    grade = score.binary_score    
-    if grade == 'yes':
-        logger.info(f"---GRADE: DOCUMENT RELEVANT---")
-        conn.send(doc)
-    else:  # no
-        logger.info(f"--GRADE: DOCUMENT NOT RELEVANT---")
-        conn.send(None)
-    
-    conn.close()
-
-class GradeDocuments(BaseModel):
-    """Binary score for relevance check on retrieved documents."""
-
-    binary_score: str = Field(description="Documents are relevant to the question, 'yes' or 'no'")
-
-def get_retrieval_grader(chat):
-    system = """You are a grader assessing relevance of a retrieved document to a user question. \n 
-    If the document contains keyword(s) or semantic meaning related to the question, grade it as relevant. \n
-    Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question."""
-
-    grade_prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", system),
-            ("human", "Retrieved document: \n\n {document} \n\n User question: {question}"),
-        ]
-    )
-    
-    # from langchain_core.output_parsers import PydanticOutputParser  # not supported for Nova
-    # parser = PydanticOutputParser(pydantic_object=GradeDocuments)
-    # retrieval_grader = grade_prompt | chat | parser
-
-    structured_llm_grader = chat.with_structured_output(GradeDocuments)
-    retrieval_grader = grade_prompt | structured_llm_grader
-    return retrieval_grader
 
 def show_extended_thinking(st, result):
     # logger.info(f"result: {result}")
@@ -1090,36 +933,9 @@ def get_tool_info(tool_name, tool_content):
     tool_references = []    
     urls = []
     content = ""
-
-    # tavily
-    if isinstance(tool_content, str) and "Title:" in tool_content and "URL:" in tool_content and "Content:" in tool_content:
-        logger.info("Tavily parsing...")
-        items = tool_content.split("\n\n")
-        for i, item in enumerate(items):
-            # logger.info(f"item[{i}]: {item}")
-            if "Title:" in item and "URL:" in item and "Content:" in item:
-                try:
-                    title_part = item.split("Title:")[1].split("URL:")[0].strip()
-                    url_part = item.split("URL:")[1].split("Content:")[0].strip()
-                    content_part = item.split("Content:")[1].strip().replace("\n", "")
-                    
-                    logger.info(f"title_part: {title_part}")
-                    logger.info(f"url_part: {url_part}")
-                    logger.info(f"content_part: {content_part}")
-
-                    content += f"{content_part}\n\n"
-                    
-                    tool_references.append({
-                        "url": url_part,
-                        "title": title_part,
-                        "content": content_part[:100] + "..." if len(content_part) > 100 else content_part
-                    })
-                except Exception as e:
-                    logger.info(f"Parsing error: {str(e)}")
-                    continue                
-
+    
     # OpenSearch
-    elif tool_name == "SearchIndexTool": 
+    if tool_name == "SearchIndexTool": 
         if ":" in tool_content:
             extracted_json_data = tool_content.split(":", 1)[1].strip()
             try:
@@ -1154,73 +970,6 @@ def get_tool_info(tool_name, tool_content):
                 
         logger.info(f"content: {content}")
         
-    # Knowledge Base
-    elif tool_name == "QueryKnowledgeBases": 
-        try:
-            # Handle case where tool_content contains multiple JSON objects
-            if tool_content.strip().startswith('{'):
-                # Parse each JSON object individually
-                json_objects = []
-                current_pos = 0
-                brace_count = 0
-                start_pos = -1
-                
-                for i, char in enumerate(tool_content):
-                    if char == '{':
-                        if brace_count == 0:
-                            start_pos = i
-                        brace_count += 1
-                    elif char == '}':
-                        brace_count -= 1
-                        if brace_count == 0 and start_pos != -1:
-                            try:
-                                json_obj = json.loads(tool_content[start_pos:i+1])
-                                # logger.info(f"json_obj: {json_obj}")
-                                json_objects.append(json_obj)
-                            except json.JSONDecodeError:
-                                logger.info(f"JSON parsing error: {tool_content[start_pos:i+1][:100]}")
-                            start_pos = -1
-                
-                json_data = json_objects
-            else:
-                # Try original method
-                json_data = json.loads(tool_content)                
-            # logger.info(f"json_data: {json_data}")
-
-            # Build content
-            if isinstance(json_data, list):
-                for item in json_data:
-                    if isinstance(item, dict) and "content" in item:
-                        content_text = item["content"].get("text", "")
-                        content += content_text + "\n\n"
-
-                        uri = "" 
-                        if "location" in item:
-                            if "s3Location" in item["location"]:
-                                uri = item["location"]["s3Location"]["uri"]
-                                # logger.info(f"uri (list): {uri}")
-                                ext = uri.split(".")[-1]
-
-                                # if ext is an image 
-                                url = sharing_url + "/" + s3_prefix + "/" + uri.split("/")[-1]
-                                if ext in ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "ico", "webp"]:
-                                    url = sharing_url + "/" + capture_prefix + "/" + uri.split("/")[-1]
-                                logger.info(f"url: {url}")
-                                
-                                tool_references.append({
-                                    "url": url, 
-                                    "title": uri.split("/")[-1],
-                                    "content": content_text[:100] + "..." if len(content_text) > 100 else content_text
-                                })          
-                
-        except json.JSONDecodeError as e:
-            logger.info(f"JSON parsing error: {e}")
-            json_data = {}
-            content = tool_content  # Use original content if parsing fails
-
-        logger.info(f"content: {content}")
-        logger.info(f"tool_references: {tool_references}")
-
     # aws document
     elif tool_name == "search_documentation":
         try:
@@ -1254,32 +1003,6 @@ def get_tool_info(tool_name, tool_content):
         logger.info(f"content: {content}")
         logger.info(f"tool_references: {tool_references}")
             
-    # ArXiv
-    elif tool_name == "search_papers" and "papers" in tool_content:
-        try:
-            json_data = json.loads(tool_content)
-
-            papers = json_data['papers']
-            for paper in papers:
-                url = paper['url']
-                title = paper['title']
-                abstract = paper['abstract'].replace("\n", "")
-                content_text = abstract[:100] + "..." if len(abstract) > 100 else abstract
-                content += f"{content_text}\n\n"
-                logger.info(f"url: {url}, title: {title}, content: {content_text}")
-
-                tool_references.append({
-                    "url": url,
-                    "title": title,
-                    "content": content_text
-                })
-        except json.JSONDecodeError:
-            logger.info(f"JSON parsing error: {tool_content}")
-            pass
-
-        logger.info(f"content: {content}")
-        logger.info(f"tool_references: {tool_references}")
-
     # aws-knowledge
     elif tool_name == "aws___read_documentation":
         logger.info(f"#### {tool_name} ####")

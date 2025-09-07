@@ -163,3 +163,28 @@ def buildChatAgentWithHistory(tools):
         store=chat.memorystore
     )
 
+def load_multiple_mcp_server_parameters(mcp_json: dict):
+    mcpServers = mcp_json.get("mcpServers")
+  
+    server_info = {}
+    if mcpServers is not None:
+        for server_name, config in mcpServers.items():
+            if config.get("type") == "streamable_http":
+                server_info[server_name] = {                    
+                    "transport": "streamable_http",
+                    "url": config.get("url"),
+                    "headers": config.get("headers", {})
+                }
+            else:
+                command = config.get("command", "")
+                args = config.get("args", [])
+                env = config.get("env", {})
+                
+                server_info[server_name] = {
+                    "transport": "stdio",
+                    "command": command,
+                    "args": args,
+                    "env": env                    
+                }
+    return server_info
+

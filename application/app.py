@@ -7,7 +7,7 @@ import sys
 import os
 import pwd 
 import asyncio
-import uuid
+import qa_agent
 
 logging.basicConfig(
     level=logging.INFO,  # Default to INFO level
@@ -53,6 +53,9 @@ mode_descriptions = {
     "Agent (Chat)": [
         "MCP를 활용한 Agent를 이용합니다. 채팅 히스토리를 이용해 interative한 대화를 즐길 수 있습니다."
     ],
+    "QA Agent": [
+        "RAG를 이용해 얻은 정보로 Test Case를 생성합니다."
+    ],
     "이미지 분석": [
         "이미지를 선택하여 멀티모달을 이용하여 분석합니다."
     ]
@@ -74,7 +77,7 @@ with st.sidebar:
     
     # radio selection
     mode = st.radio(
-        label="원하는 대화 형태를 선택하세요. ",options=["일상적인 대화", "RAG", "Agent", "Agent (Chat)", "이미지 분석"], index=2
+        label="원하는 대화 형태를 선택하세요. ",options=["일상적인 대화", "RAG", "Agent", "Agent (Chat)", "QA Agent", "이미지 분석"], index=2
     )   
     st.info(mode_descriptions[mode][0])
     
@@ -308,9 +311,20 @@ if prompt := st.chat_input("메시지를 입력하세요."):
             })
 
             for url in image_url:
-                    logger.info(f"url: {url}")
-                    file_name = url[url.rfind('/')+1:]
-                    st.image(url, caption=file_name, use_container_width=True)
+                logger.info(f"url: {url}")
+                file_name = url[url.rfind('/')+1:]
+                st.image(url, caption=file_name, use_container_width=True)
+        
+        elif mode == "QA Agent":
+            with st.status("thinking...", expanded=True, state="running") as status:
+                containers = {
+                    "tools": st.empty(),
+                    "status": st.empty(),
+                    "notification": [st.empty() for _ in range(500)]
+                }
+                response = asyncio.run(qa_agent.run_qa_agent(prompt, containers))
+                logger.info(f"response: {response}")
+                st.session_state.messages.append({"role": "assistant", "content": response})
         
         elif mode == "이미지 분석":
             if uploaded_file is None or uploaded_file == "":
