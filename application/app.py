@@ -38,7 +38,7 @@ logger.info(f"environment: {environment}")
 os.environ["DEV"] = "true"  # Skip user confirmation of get_user_input
 
 # title
-st.set_page_config(page_title='Streamable MCP', page_icon=None, layout="centered", initial_sidebar_state="auto", menu_items=None)
+st.set_page_config(page_title='MOP', page_icon=None, layout="centered", initial_sidebar_state="auto", menu_items=None)
 
 mode_descriptions = {
     "일상적인 대화": [
@@ -48,7 +48,7 @@ mode_descriptions = {
         "Bedrock Knowledge Base를 이용해 구현한 RAG로 필요한 정보를 검색합니다."
     ],
     "Agent": [
-        "MCP를 활용한 Agent를 이용합니다. 왼쪽 메뉴에서 필요한 MCP를 선택하세요."
+        "MCP와 LangGraph를 활용한 Agent를 이용합니다. 왼쪽 메뉴에서 필요한 MCP를 선택하세요."
     ],
     "Agent (Chat)": [
         "MCP를 활용한 Agent를 이용합니다. 채팅 히스토리를 이용해 interative한 대화를 즐길 수 있습니다."
@@ -67,7 +67,7 @@ with st.sidebar:
         "여기에서는 MCP를 이용해 RAG를 구현하고, Multi agent를 이용해 다양한 기능을 구현할 수 있습니다." 
         "또한 번역이나 문법 확인과 같은 용도로 사용할 수 있습니다."
         "주요 코드는 LangChain과 LangGraph를 이용해 구현되었습니다.\n"
-        "상세한 코드는 [Github](https://github.com/kyopark2014/mcp-tools)을 참조하세요."
+        "상세한 코드는 [Github](https://github.com/kyopark2014/lgm-project)을 참조하세요."
     )
 
     st.subheader("🐱 대화 형태")
@@ -85,16 +85,11 @@ with st.sidebar:
 
         # Change radio to checkbox
         mcp_options = [
-            "basic", "use_aws (docker)", "use_aws (streamable)", "kb-retriever (docker)", "kb-retriever (streamable)", "agentcore_coder", "사용자 설정"
+            "use-aws", "knowledge base", "code interpreter", "terminal", "filesystem", "aws_documentation","사용자 설정"
         ]
         mcp_selections = {}
-        default_selections = ["kb-retriever (streamable)"]
+        default_selections = ["knowledge base", "code interpreter"]
         
-        if mode=='Agent' or mode=='Agent (Chat)':
-            agentType = st.radio(
-                label="Agent 타입을 선택하세요. ",options=["langgraph", "strands"], index=0
-            )
-
         with st.expander("MCP 옵션 선택", expanded=True):            
             for option in mcp_options:
                 default_value = option in default_selections
@@ -164,11 +159,6 @@ with st.sidebar:
     debugMode = 'Enable' if select_debugMode else 'Disable'
     #print('debugMode: ', debugMode)
 
-    # multi region check box
-    select_multiRegion = st.checkbox('Multi Region', value=False)
-    multiRegion = 'Enable' if select_multiRegion else 'Disable'
-    #print('multiRegion: ', multiRegion)
-
     # extended thinking of claude 3.7 sonnet
     reasoningMode = "Disable"
     if mode == "일상적인 대화" or mode == "RAG":
@@ -187,7 +177,7 @@ with st.sidebar:
         st.subheader("🌇 이미지 업로드")
         uploaded_file = st.file_uploader("이미지 분석을 위한 파일을 선택합니다.", type=["png", "jpg", "jpeg"])
 
-    chat.update(modelName, debugMode, multiRegion, reasoningMode, gradingMode, agentType)    
+    chat.update(modelName, debugMode, reasoningMode, gradingMode)    
 
     st.success(f"Connected to {modelName}", icon="💚")
     clear_button = st.button("대화 초기화", key="clear")
@@ -305,21 +295,12 @@ if prompt := st.chat_input("메시지를 입력하세요."):
                     "notification": [st.empty() for _ in range(500)]
                 }
 
-                if agentType == "langgraph":
-                    response, image_url = asyncio.run(chat.run_langgraph_agent(
-                        query=prompt, 
-                        mcp_servers=mcp_servers, 
-                        history_mode=history_mode, 
-                        containers=containers))
+                response, image_url = asyncio.run(chat.run_langgraph_agent(
+                    query=prompt, 
+                    mcp_servers=mcp_servers, 
+                    history_mode=history_mode, 
+                    containers=containers))
 
-                else:
-                    response, image_url = asyncio.run(chat.run_strands_agent(
-                        query=prompt, 
-                        strands_tools=[], 
-                        mcp_servers=mcp_servers, 
-                        history_mode=history_mode, 
-                        containers=containers))
-        
             st.session_state.messages.append({
                 "role": "assistant", 
                 "content": response,
