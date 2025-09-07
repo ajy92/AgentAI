@@ -38,6 +38,9 @@ logging.basicConfig(
     ]
 )
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(script_dir, "config.json")
+
 logger = logging.getLogger("chat")
 
 reasoning_mode = 'Disable'
@@ -46,21 +49,29 @@ debug_messages = []  # List to store debug messages
 config = utils.load_config()
 print(f"config: {config}")
 
-bedrock_region = config["region"] if "region" in config else "us-west-2"
-projectName = config["projectName"] if "projectName" in config else "mcp-rag"
-accountId = config["accountId"] if "accountId" in config else None
+projectName = config.get("projectName", "mop")
+bedrock_region = config.get("region", "")
 
-if accountId is None:
-    raise Exception ("No accountId")
-region = config["region"] if "region" in config else "us-west-2"
-logger.info(f"region: {region}")
+accountId = config.get("accountId", "")
+if not accountId or not bedrock_region:
+    sts = boto3.client("sts")
+    response = sts.get_caller_identity()
+    accountId = response["Account"]
+    bedrock_region = response["Region"]
 
+    config["accountId"] = accountId
+    config["region"] = bedrock_region
+
+    # save config
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2)
+    
 knowledge_base_name = projectName
 numberOfDocs = 4
 
 MSG_LENGTH = 100    
 
-model_name = "Claude 3.5 Sonnet"
+model_name = "Claude 3.7 Sonnet"
 model_type = "claude"
 models = info.get_model_info(model_name)
 number_of_models = len(models)
