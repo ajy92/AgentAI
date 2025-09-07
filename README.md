@@ -6,6 +6,8 @@
 
 ## MCP와 LangGraph를 이용하여 Agent 구현하기
 
+아래에서는 MCP와 LangGraph를 이용해 RAG 등을 활용할 수 있는 Agent를 구현하는 방법에 대해 설명합니다.
+
 ### Agent
 
 아래와 같이 ReAct 형태의 LangGraph Agent를 정의합니다. 여기서는 checkpoint와 memorystore를 이용해 최근 대화 내용을 참조합니다.
