@@ -1,6 +1,9 @@
 # LGM Project
 
-여기서는 LangGraph 방식의 Agent를 MCP를 이용해 활용하는 방법에 대해 설명합니다.
+여기서는 LangGraph 방식의 Agent를 MCP를 이용해 활용하는 방법에 대해 설명합니다. 전체적인 architecture는 아래와 같습니다.
+
+<img width="691" height="440" alt="image" src="https://github.com/user-attachments/assets/b279399e-e542-4343-a995-020fca71a4e5" />
+
 
 ## MCP와 LangGraph를 이용하여 Agent 구현하기
 
