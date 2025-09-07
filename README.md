@@ -465,12 +465,15 @@ async for output in app.astream(inputs, config, stream_mode="messages"):
       result += text_content
 ```
 
+
+## 실행 하기
+
 ### Knowledge Base 준비
 
 [knowledge_base.md](./knowledge_base.md)을 참조하여 Knowledge Base를 생성합니다.
 
 
-## 설치 방법
+### 설치 방법
 
 1) 소스를 다운로드 합니다.
 
@@ -494,5 +497,18 @@ config.json 파일을 열어서, "knowledge_base_id"를 입력합니다. 이 값
 streamlit run application/app.py
 ```
 
-## 실행 하기
+### 실행 예제
+
+왼쪽 메뉴에서 Agent와 "Knowledge Base" MCP를 선택하고 질문을 입력하면, RAG로 부터 문서를 조회하여 아래와 같은 결과를 얻을 수 있습니다.
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/0c8064cc-00ff-4d80-ac6c-01ff3b4c1d97" />
+
+MCP로 "code interpreter"를 선택한 후에 "DNA의 나선형 구조를 그려주세요."을 입력합니다. 적절한 code를 생성하여 repl_coder를 이용해 아래와 같은 그림을 그릴 수 있습니다.
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/cb3988b3-3f03-4e75-993b-d380d2ef3ad7" />
+
+왼쪽 메뉴에서 "QA Agent"를 선택하고 아래와 같이 질문을 하면 RAG에서 얻어진 문서를 바탕으로 Test case들을 생성할 수 있습니다.
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/c5f0deb5-8f56-458e-a5d5-f0b953e90c6f" />
+
 
