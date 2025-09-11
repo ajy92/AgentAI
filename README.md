@@ -241,7 +241,26 @@ git clone https://github.com/kyopark2014/lgm-project
 2) config.json을 생성합니다.
 
 ```text
-cd lgm-project/application && cp # lgm-project
+cd lgm-project/application && cp config.json.sample config.json
+```
+
+3) [knowledge_base.md](https://github.com/kyopark2014/lgm-project/blob/main/knowledge_base.md)에 따라 Knowledge Base를 설치합니다. 설치가 완료되면 아래와 같이 Knowledge Base ID를 확인할 수 있습니다.
+
+<img width="554" height="156" alt="image" src="https://github.com/user-attachments/assets/e3a3d25c-7841-4b6c-bdb3-9aab67e00511" />
+
+4) AWS CLI를 통해 아래의 Knowledge Based ID와 AWS Credential을 설정합니다. 만약, AWS CLI를 사용하기 어려운 환경이라면(예 워크샵 계정) config.json 파일을 열어서 access_key_id, secret_access_key, session_token을 입력합니다.
+
+```java
+{
+    "projectName":"mcp",
+    "knowledge_base_id":"LDROX0QNVM",
+    "region":"us-west-2",
+    "aws": {
+        "access_key_id": "your_access_key_here",
+        "secret_access_key": "your_secret_key_here",
+        "session_token": "your_session_token_here"
+    }
+ }
 ```
 
 여기서는 LangGraph 방식의 Agent를 MCP를 이용해 활용하는 방법에 대해 설명합니다.
