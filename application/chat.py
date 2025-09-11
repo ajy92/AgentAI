@@ -838,13 +838,13 @@ def run_rag_with_knowledge_base(query, st):
         logger.info(f"error message: {err_msg}")                    
         raise Exception ("Not able to request to LLM")
     
-    if relevant_docs:
-        ref = "\n\n### Reference\n"
-        for i, doc in enumerate(relevant_docs):
-            page_content = doc["contents"][:100].replace("\n", "")
-            ref += f"{i+1}. [{doc["reference"]['title']}]({doc["reference"]['url']}), {page_content}...\n"    
-        logger.info(f"ref: {ref}")
-        msg += ref
+    # if relevant_docs:
+    #     ref = "\n\n### Reference\n"
+    #     for i, doc in enumerate(relevant_docs):
+    #         page_content = doc["contents"][:100].replace("\n", "")
+    #         ref += f"{i+1}. [{doc["reference"]['title']}]({doc["reference"]['url']}), {page_content}...\n"    
+    #     logger.info(f"ref: {ref}")
+    #     msg += ref
     
     return msg, reference_docs
    
@@ -878,13 +878,15 @@ def add_notification(containers, message):
         containers['notification'][index].info(message)
     index += 1
 
-def update_streaming_result(containers, message):
+def update_streaming_result(containers, message, type):
     global streaming_index
-    streaming_index = index 
+    streaming_index = index
 
     if containers is not None:
-        containers['notification'][streaming_index].markdown(message)
-
+        if type == "markdown":
+            containers['notification'][streaming_index].markdown(message)
+        elif type == "info":
+            containers['notification'][streaming_index].info(message)
 def update_tool_notification(containers, tool_index, message):
     if containers is not None:
         containers['notification'][tool_index].info(message)
@@ -1197,9 +1199,9 @@ async def run_langgraph_agent(query, mcp_servers, history_mode, containers):
     result = ""
     tool_used = False  # Track if tool was used
     tool_name = toolUseId = ""
-    async for output in app.astream(inputs, config, stream_mode="messages"):
-        if isinstance(output[0], AIMessageChunk):
-            message = output[0]    
+    async for stream in app.astream(inputs, config, stream_mode="messages"):
+        if isinstance(stream[0], AIMessageChunk):
+            message = stream[0]    
             input = {}        
             if isinstance(message.content, list):
                 for content_item in message.content:
@@ -1216,7 +1218,7 @@ async def run_langgraph_agent(query, mcp_servers, history_mode, containers):
                                 result += text_content
                                 
                             # logger.info(f"result: {result}")                
-                            update_streaming_result(containers, result)
+                            update_streaming_result(containers, result, "markdown")
 
                         elif content_item.get('type') == 'tool_use':
                             logger.info(f"content_item: {content_item}")      
@@ -1224,10 +1226,8 @@ async def run_langgraph_agent(query, mcp_servers, history_mode, containers):
                                 toolUseId = content_item.get('id', '')
                                 tool_name = content_item.get('name', '')
                                 logger.info(f"tool_name: {tool_name}, toolUseId: {toolUseId}")
-                                add_notification(containers, f"Tool: {tool_name}, Input: {input}")
-
-                                tool_info_list[toolUseId] = index                     
-                                tool_name_list[toolUseId] = tool_name     
+                                streaming_index = index                                                                                                                         
+                                index += 1
                                                                     
                             if 'partial_json' in content_item:
                                 partial_json = content_item.get('partial_json', '')
@@ -1240,12 +1240,10 @@ async def run_langgraph_agent(query, mcp_servers, history_mode, containers):
                                 logger.info(f"input: {input}")
 
                                 logger.info(f"tool_name: {tool_name}, input: {input}, toolUseId: {toolUseId}")
-                                # add_notification(containers, f"Tool: {tool_name}, Input: {input}")
-                                index = tool_info_list[toolUseId]
-                                containers['notification'][index-1].info(f"Tool: {tool_name}, Input: {input}")
+                                update_streaming_result(containers, f"Tool: {tool_name}, Input: {input}", "info")
                         
-        elif isinstance(output[0], ToolMessage):
-            message = output[0]
+        elif isinstance(stream[0], ToolMessage):
+            message = stream[0]
             logger.info(f"ToolMessage: {message.name}, {message.content}")
             tool_name = message.name
             toolResult = message.content
@@ -1271,12 +1269,12 @@ async def run_langgraph_agent(query, mcp_servers, history_mode, containers):
         result = "답변을 찾지 못하였습니다."        
     logger.info(f"result: {result}")
 
-    if references:
-        ref = "\n\n### Reference\n"
-        for i, reference in enumerate(references):
-            page_content = reference['content'][:100].replace("\n", "")
-            ref += f"{i+1}. [{reference['title']}]({reference['url']}), {page_content}...\n"    
-        result += ref
+    # if references:
+    #     ref = "\n\n### Reference\n"
+    #     for i, reference in enumerate(references):
+    #         page_content = reference['content'][:100].replace("\n", "")
+    #         ref += f"{i+1}. [{reference['title']}]({reference['url']}), {page_content}...\n"    
+    #     result += ref
     
     if containers is not None:
         containers['notification'][index].markdown(result)
