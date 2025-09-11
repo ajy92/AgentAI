@@ -1230,10 +1230,7 @@ async def run_langgraph_agent(query, mcp_servers, history_mode, containers):
     tool_used = False  # Track if tool was used
     tool_name = toolUseId = ""
     async for output in app.astream(inputs, config, stream_mode="messages"):
-        # logger.info(f"output: {output}")
-
-        # Handle tuple output (message, metadata)
-        if isinstance(output, tuple) and len(output) > 0 and isinstance(output[0], AIMessageChunk):
+        if isinstance(output[0], AIMessageChunk):
             message = output[0]    
             input = {}        
             if isinstance(message.content, list):
@@ -1279,7 +1276,7 @@ async def run_langgraph_agent(query, mcp_servers, history_mode, containers):
                                 index = tool_info_list[toolUseId]
                                 containers['notification'][index-1].info(f"Tool: {tool_name}, Input: {input}")
                         
-        elif isinstance(output, tuple) and len(output) > 0 and isinstance(output[0], ToolMessage):
+        elif isinstance(output[0], ToolMessage):
             message = output[0]
             logger.info(f"ToolMessage: {message.name}, {message.content}")
             tool_name = message.name

@@ -39,9 +39,24 @@ def load_config():
 
 config = load_config()
 
-bedrock_region = config['region']
-accountId = config['accountId']
-projectName = config['projectName']
+script_dir = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(script_dir, "config.json")
+
+accountId = config.get('accountId')
+if not accountId:
+    sts = boto3.client("sts")
+    response = sts.get_caller_identity()
+    accountId = response["Account"]
+    config['accountId'] = accountId
+    config['region'] = response["Region"]
+    config['projectName'] = "mop"
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2)
+
+bedrock_region = config.get('region', 'us-west-2')
+logger.info(f"bedrock_region: {bedrock_region}")
+projectName = config.get('projectName', 'mop')
+logger.info(f"projectName: {projectName}")
 
 def get_contents_type(file_name):
     if file_name.lower().endswith((".jpg", ".jpeg")):
