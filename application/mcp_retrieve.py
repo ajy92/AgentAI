@@ -30,7 +30,21 @@ projectName = config['projectName']
 knowledge_base_id = config['knowledge_base_id']
 number_of_results = 5
 
-bedrock_agent_runtime_client = boto3.client("bedrock-agent-runtime", region_name=bedrock_region)
+aws_access_key = os.environ.get('AWS_ACCESS_KEY_ID')
+aws_secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+aws_session_token = os.environ.get('AWS_SESSION_TOKEN')
+aws_region = os.environ.get('AWS_DEFAULT_REGION', 'us-west-2')
+
+if aws_access_key and aws_secret_key:
+    bedrock_agent_runtime_client = boto3.client(
+        "bedrock-agent-runtime", region_name=bedrock_region,
+        aws_access_key_id=aws_access_key,
+        aws_secret_access_key=aws_secret_key,
+        aws_session_token=aws_session_token,
+    )
+else:
+    bedrock_agent_runtime_client = boto3.client(
+        "bedrock-agent-runtime", region_name=bedrock_region)
 
 def retrieve(query):
     response = bedrock_agent_runtime_client.retrieve(

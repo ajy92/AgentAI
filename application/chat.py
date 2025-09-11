@@ -429,37 +429,6 @@ def show_extended_thinking(st, result):
             thinking = result.response_metadata["thinking"]["text"]
             st.info(thinking)
 
-def grade_documents(question, documents):
-    logger.info(f"###### grade_documents ######")
-    
-    logger.info(f"start grading...")
-    
-    filtered_docs = []
-        
-    llm = get_chat(extended_thinking="Disable")
-    retrieval_grader = get_retrieval_grader(llm)
-    for i, doc in enumerate(documents):
-        # print('doc: ', doc)
-        print_doc(i, doc)
-        
-        score = retrieval_grader.invoke({"question": question, "document": doc.page_content})
-        # print("score: ", score)
-        
-        grade = score.binary_score
-        # print("grade: ", grade)
-        # Document relevant
-        if grade.lower() == "yes":
-            logger.info(f"---GRADE: DOCUMENT RELEVANT---")
-            filtered_docs.append(doc)
-        # Document not relevant
-        else:
-            logger.info(f"---GRADE: DOCUMENT NOT RELEVANT---")
-            # We do not include the document in filtered_docs
-            # We set a flag to indicate that we want to run web search
-            continue
-
-    return filtered_docs
-
 ####################### LangChain #######################
 # General Conversation
 #########################################################
