@@ -95,7 +95,18 @@ def get_boto3_client(
     Returns:
         A boto3 client object for the specified service
     """
-    session = boto3.Session(profile_name=profile_name)
+    if aws_access_key and aws_secret_key:
+        session = boto3.Session(
+            profile_name=profile_name,
+            aws_access_key_id=aws_access_key,
+            aws_secret_access_key=aws_secret_key,
+            aws_session_token=aws_session_token
+        )
+    else:
+        session = boto3.Session(
+            profile_name=profile_name,
+            region_name=region_name
+        )
     return session.client(service_name=service_name, region_name=region_name)
 
 def handle_streaming_body(response: Dict[str, Any]) -> Dict[str, Any]:
