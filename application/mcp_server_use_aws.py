@@ -35,10 +35,21 @@ except Exception as e:
         err_msg = f"Error: {str(e)}"
         logger.info(f"{err_msg}")
 
-aws_access_key = os.environ.get('AWS_ACCESS_KEY_ID')
-aws_secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
-aws_session_token = os.environ.get('AWS_SESSION_TOKEN')
-aws_region = os.environ.get('AWS_DEFAULT_REGION', 'us-west-2')
+def load_config():
+    config = None
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, "config.json")
+    
+    with open(config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)    
+    return config
+
+config = load_config()
+
+aws_access_key = config.get('aws', {}).get('access_key_id')
+aws_secret_key = config.get('aws', {}).get('secret_access_key')
+aws_session_token = config.get('aws', {}).get('session_token')
+aws_region = config.get('region', 'us-west-2')
 
 MUTATIVE_OPERATIONS = [
     "create",
