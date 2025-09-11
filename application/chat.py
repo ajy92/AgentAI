@@ -1097,7 +1097,7 @@ def get_tool_info(tool_name, tool_content):
     return content, urls, tool_references
 
 async def run_langgraph_agent(query, mcp_servers, history_mode, containers):
-    global index
+    global index, streaming_index
     index = 0
 
     image_url = []
@@ -1226,7 +1226,7 @@ async def run_langgraph_agent(query, mcp_servers, history_mode, containers):
                                 toolUseId = content_item.get('id', '')
                                 tool_name = content_item.get('name', '')
                                 logger.info(f"tool_name: {tool_name}, toolUseId: {toolUseId}")
-                                streaming_index = index                                                                                                                         
+                                streaming_index = index
                                 index += 1
                                                                     
                             if 'partial_json' in content_item:
