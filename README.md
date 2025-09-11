@@ -252,7 +252,7 @@ cd lgm-project && cp application/config.json.sample application/config.json
 ```java
 {
     "projectName":"mcp",
-    "knowledge_base_id":"LDROX0QNVM",
+    "knowledge_base_id":"1CMBJP5NME",
     "region":"us-west-2",
     "aws": {
         "access_key_id": "your_access_key_here",
