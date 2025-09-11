@@ -79,10 +79,9 @@ model_id = models[0]["model_id"]
 debug_mode = "Enable"
 multi_region = "Disable"
 
-aws_access_key = os.environ.get('AWS_ACCESS_KEY_ID')
-aws_secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
-aws_session_token = os.environ.get('AWS_SESSION_TOKEN')
-aws_region = os.environ.get('AWS_DEFAULT_REGION', 'us-west-2')
+aws_access_key = config.get('aws', {}).get('access_key_id')
+aws_secret_key = config.get('aws', {}).get('secret_access_key')
+aws_session_token = config.get('aws', {}).get('session_token')
 
 reasoning_mode = 'Disable'
 grading_mode = 'Disable'
