@@ -44,11 +44,14 @@ config_path = os.path.join(script_dir, "config.json")
 
 accountId = config.get('accountId')
 if not accountId:
+    session = boto3.Session()
+    region = session.region_name
+
     sts = boto3.client("sts")
     response = sts.get_caller_identity()
     accountId = response["Account"]
     config['accountId'] = accountId
-    config['region'] = response["Region"]
+    config['region'] = region
     config['projectName'] = "mop"
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
