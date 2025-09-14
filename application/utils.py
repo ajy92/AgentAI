@@ -11,7 +11,6 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
 
 logging.basicConfig(
     level=logging.INFO,  # Default to INFO level
@@ -133,30 +132,6 @@ except Exception as e:
     # raise e
     pass
 
-# api key to use Tavily Search
-tavily_key = tavily_api_wrapper = ""
-try:
-    get_tavily_api_secret = secretsmanager.get_secret_value(
-        SecretId=f"tavilyapikey-{projectName}"
-    )
-    #print('get_tavily_api_secret: ', get_tavily_api_secret)
-    secret = json.loads(get_tavily_api_secret['SecretString'])
-    #print('secret: ', secret)
-
-    if "tavily_api_key" in secret:
-        tavily_key = secret['tavily_api_key']
-        #print('tavily_api_key: ', tavily_api_key)
-
-        if tavily_key:
-            tavily_api_wrapper = TavilySearchAPIWrapper(tavily_api_key=tavily_key)
-            #     os.environ["TAVILY_API_KEY"] = tavily_key
-
-        else:
-            logger.info(f"tavily_key is required.")
-except Exception as e: 
-    logger.info(f"Tavily credential is required: {e}")
-    # raise e
-    pass
 
 # api key to use firecrawl Search
 firecrawl_key = ""
