@@ -88,7 +88,7 @@ with st.sidebar:
 
         # Change radio to checkbox
         mcp_options = [
-            "use-aws", "knowledge base", "code interpreter", "terminal", "filesystem", "aws_documentation","사용자 설정"
+            "use-aws", "knowledge base", "code interpreter", "terminal", "filesystem", "aws_documentation", "aws_diagram", "사용자 설정"
         ]
         mcp_selections = {}
         default_selections = ["knowledge base", "code interpreter"]
