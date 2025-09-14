@@ -1,0 +1,11 @@
+{
+  "projectName": "mcp",
+  "knowledge_base_id": "YOUR_KNOWLEDGE_BASE_ID",
+  "region": "us-west-2",
+  "aws": {
+    "aws_access_key_id": "YOUR_ACCESS_KEY",
+    "aws_secret_access_key": "YOUR_SECRET_KEY",
+    "aws_session_token": "YOUR_SESSION_TOKEN"
+  },
+  "accountId": "YOUR_ACCOUNT_ID"
+}
