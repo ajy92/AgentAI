@@ -106,6 +106,36 @@ def load_config(mcp_type):
             }
         }
     
+    elif mcp_type == "aws_diagram":
+        return {
+            "mcpServers": {
+                "github.com/awslabs/mcp/tree/main/src/aws-diagram-mcp-server": {
+                "command": "uvx",
+                "args": ["awslabs.aws-diagram-mcp-server"],
+                "env": {
+                    "FASTMCP_LOG_LEVEL": "ERROR"
+                },
+                "autoApprove": [],
+                "disabled": false
+                }
+            }
+        }
+    
+    elif mcp_type == "aws_terraform":
+        return {
+            "mcpServers": {
+                "awslabs.terraform-mcp-server": {
+                    "command": "uvx",
+                    "args": ["awslabs.terraform-mcp-server@latest"],
+                    "env": {
+                        "FASTMCP_LOG_LEVEL": "ERROR"
+                    },
+                    "disabled": false,
+                    "autoApprove": []
+                }
+            }
+        }
+    
     elif mcp_type == "사용자 설정":
         return mcp_user_config
 
