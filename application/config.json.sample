@@ -3,9 +3,9 @@
   "knowledge_base_id": "YOUR_KNOWLEDGE_BASE_ID",
   "region": "us-west-2",
   "aws": {
-    "aws_access_key_id": "YOUR_ACCESS_KEY",
-    "aws_secret_access_key": "YOUR_SECRET_KEY",
-    "aws_session_token": "YOUR_SESSION_TOKEN"
+    "aws_access_key_id": "YOUR_AWS_ACCESS_KEY_ID_HERE",
+    "aws_secret_access_key": "YOUR_AWS_SECRET_ACCESS_KEY_HERE",
+    "aws_session_token": "YOUR_AWS_SESSION_TOKEN_HERE"
   },
   "accountId": "YOUR_ACCOUNT_ID"
 }

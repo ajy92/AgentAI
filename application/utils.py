@@ -254,6 +254,38 @@ async def generate_pdf_report(report_content: str, filename: str) -> str:
         except Exception as text_error:
             return f"Error generating report: {str(e)}. Text fallback also failed: {str(text_error)}"
 
+def copy_external_image_to_project(image_url):
+    """
+    외부 경로의 이미지를 프로젝트 내부로 복사합니다.
+    """
+    import shutil
+    import uuid
+    
+    if not image_url or not os.path.exists(image_url):
+        return image_url
+    
+    # 프로젝트 내부 contents 디렉토리 생성
+    contents_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "contents")
+    os.makedirs(contents_dir, exist_ok=True)
+    
+    # 파일명 생성
+    original_filename = os.path.basename(image_url)
+    name, ext = os.path.splitext(original_filename)
+    if not ext:
+        ext = '.png'
+    
+    new_filename = f"{name}_{uuid.uuid4().hex[:8]}{ext}"
+    new_path = os.path.join(contents_dir, new_filename)
+    
+    try:
+        # 파일 복사
+        shutil.copy2(image_url, new_path)
+        logger.info(f"Image copied from {image_url} to {new_path}")
+        return new_path
+    except Exception as e:
+        logger.error(f"Failed to copy image: {e}")
+        return image_url
+
 def status(st, str):
     st.info(str)
 def stcode(st, code):

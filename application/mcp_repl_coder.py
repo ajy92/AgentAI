@@ -74,7 +74,10 @@ print(image_base64)
     if base64Img:
         byteImage = BytesIO(base64.b64decode(base64Img))
 
-        image_name = generate_short_uuid()+'.png'
+        image_name = generate_short_uuid()
+        # 확장자가 없는 경우에만 .png 추가
+        if not image_name.endswith('.png'):
+            image_name += '.png'
 
         os.makedirs('contents', exist_ok=True)
         file_path = os.path.join('contents', image_name)

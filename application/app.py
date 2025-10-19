@@ -8,6 +8,7 @@ import os
 import pwd 
 import asyncio
 import qa_agent
+import utils
 
 logging.basicConfig(
     level=logging.INFO,  # Default to INFO level
@@ -202,7 +203,7 @@ if uploaded_file is not None and clear_button==False:
     logger.info(f"uploaded_file.name: {uploaded_file.name}")
 
     if uploaded_file and clear_button==False and mode == '이미지 분석':
-        st.image(uploaded_file, caption="이미지 미리보기", use_container_width=True)
+        st.image(uploaded_file, caption="이미지 미리보기", width='stretch')
 
         file_name = uploaded_file.name
         file_bytes = uploaded_file.getvalue()
@@ -221,10 +222,12 @@ def display_chat_messages() -> None:
         with st.chat_message(message["role"]):
             if "images" in message:                
                 for url in message["images"]:
-                    logger.info(f"url: {url}")
-
-                    file_name = url[url.rfind('/')+1:]
-                    st.image(url, caption=file_name, use_container_width=True)
+                    if url:  # url이 None이 아닌지 확인
+                        logger.info(f"url: {url}")
+                        # 외부 경로의 이미지를 프로젝트 내부로 복사
+                        local_url = utils.copy_external_image_to_project(url)
+                        file_name = local_url[local_url.rfind('/')+1:] if '/' in local_url else local_url
+                        st.image(local_url, caption=file_name, width='stretch')
             st.markdown(message["content"])
 
 display_chat_messages()
@@ -310,10 +313,15 @@ if prompt := st.chat_input("메시지를 입력하세요."):
                 "images": image_url if image_url else []
             })
 
-            for url in image_url:
-                logger.info(f"url: {url}")
-                file_name = url[url.rfind('/')+1:]
-                st.image(url, caption=file_name, use_container_width=True)
+            if image_url:  # image_url이 None이 아니고 빈 리스트가 아닌지 확인
+                for url in image_url:
+                    if url:  # url이 None이 아닌지 확인
+                        logger.info(f"original url: {url}")
+                        # 외부 경로의 이미지를 프로젝트 내부로 복사
+                        local_url = utils.copy_external_image_to_project(url)
+                        logger.info(f"local url: {local_url}")
+                        file_name = local_url[local_url.rfind('/')+1:] if '/' in local_url else local_url
+                        st.image(local_url, caption=file_name, width='stretch')
         
         elif mode == "QA Agent":
             with st.status("thinking...", expanded=True, state="running") as status:

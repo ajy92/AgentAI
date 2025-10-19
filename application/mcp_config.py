@@ -116,7 +116,7 @@ def load_config(mcp_type):
                     "FASTMCP_LOG_LEVEL": "ERROR"
                 },
                 "autoApprove": [],
-                "disabled": false
+                "disabled": False
                 }
             }
         }
@@ -130,7 +130,7 @@ def load_config(mcp_type):
                     "env": {
                         "FASTMCP_LOG_LEVEL": "ERROR"
                     },
-                    "disabled": false,
+                    "disabled": False,
                     "autoApprove": []
                 }
             }
