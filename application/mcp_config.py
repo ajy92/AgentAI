@@ -139,6 +139,19 @@ def load_config(mcp_type):
     elif mcp_type == "사용자 설정":
         return mcp_user_config
 
+def create_cognito_bearer_token(config):
+    """
+    Create Cognito bearer token for AWS services
+    """
+    try:
+        # For now, return None as this function is not fully implemented
+        # This prevents the error but doesn't provide actual authentication
+        logger.warning("create_cognito_bearer_token not fully implemented, returning None")
+        return None
+    except Exception as e:
+        logger.error(f"Error creating Cognito bearer token: {e}")
+        return None
+
 def load_selected_config(mcp_servers: dict):
     logger.info(f"mcp_servers: {mcp_servers}")
     

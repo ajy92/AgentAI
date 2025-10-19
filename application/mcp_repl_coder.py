@@ -5,7 +5,11 @@ import sys
 import uuid
 import os
 
-from langchain_experimental.tools import PythonAstREPLTool
+try:
+    from langchain_experimental.tools import PythonAstREPLTool
+except ImportError as e:
+    logging.warning(f"Failed to import PythonAstREPLTool: {e}")
+    PythonAstREPLTool = None
 from io import BytesIO
 
 logging.basicConfig(
@@ -17,7 +21,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("mcp-cost")
 
-repl = PythonAstREPLTool()
+repl = PythonAstREPLTool() if PythonAstREPLTool else None
 
 def repl_coder(code):
     """
@@ -25,6 +29,9 @@ def repl_coder(code):
     If you want to see the output of a value, you should print it out with `print(...)`. This is visible to the user.
     code: the Python code was written in English
     """
+    if repl is None:
+        return "Python REPL tool is not available due to import error. Please check langchain_experimental installation."
+    
     try:
         result = repl.run(code)
     except BaseException as e:

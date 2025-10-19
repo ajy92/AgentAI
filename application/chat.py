@@ -15,9 +15,10 @@ from PIL import Image
 from langchain_aws import ChatBedrock
 from botocore.config import Config
 from langchain_core.prompts import MessagesPlaceholder, ChatPromptTemplate
-from langchain.memory import ConversationBufferWindowMemory
-from langchain.docstore.document import Document
-from pydantic.v1 import BaseModel, Field
+# from langchain_community.memory import ConversationBufferWindowMemory
+from collections import deque
+from langchain_core.documents import Document
+from pydantic import BaseModel, Field
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage, AIMessageChunk
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -27,6 +28,34 @@ from langgraph.store.memory import InMemoryStore
 from multiprocessing import Process, Pipe
 
 import logging
+
+# Custom ConversationBufferWindowMemory implementation
+class ConversationBufferWindowMemory:
+    def __init__(self, memory_key='chat_history', output_key='answer', return_messages=True, k=5):
+        self.memory_key = memory_key
+        self.output_key = output_key
+        self.return_messages = return_messages
+        self.k = k
+        self.messages = deque(maxlen=k)
+    
+    def add_message(self, message):
+        self.messages.append(message)
+    
+    def get_messages(self):
+        return list(self.messages)
+    
+    def clear(self):
+        self.messages.clear()
+    
+    def save_context(self, inputs, outputs):
+        if self.return_messages:
+            if 'input' in inputs:
+                self.add_message(HumanMessage(content=inputs['input']))
+            if 'output' in outputs:
+                self.add_message(AIMessage(content=outputs['output']))
+    
+    def load_memory_variables(self, inputs):
+        return {self.memory_key: self.get_messages()}
 import sys
 
 logging.basicConfig(
@@ -437,7 +466,7 @@ def general_conversation(query):
     llm = get_chat(extended_thinking=reasoning_mode)
 
     system = (
-        "당신의 이름은 서연이고, 질문에 대해 친절하게 답변하는 사려깊은 인공지능 도우미입니다."
+        "당신의 이름은 줄리우스이고, 질문에 대해 친절하게 답변하는 사려깊은 인공지능 도우미입니다."
         "상황에 맞는 구체적인 세부 정보를 충분히 제공합니다." 
         "모르는 질문을 받으면 솔직히 모른다고 말합니다."
     )
@@ -690,7 +719,7 @@ def get_rag_prompt(text):
     if model_type == "nova":
         if isKorean(text)==True:
             system = (
-                "당신의 이름은 서연이고, 질문에 대해 친절하게 답변하는 사려깊은 인공지능 도우미입니다."
+                "당신의 이름은 줄리우스이고, 질문에 대해 친절하게 답변하는 사려깊은 인공지능 도우미입니다."
                 "다음의 Reference texts을 이용하여 user의 질문에 답변합니다."
                 "모르는 질문을 받으면 솔직히 모른다고 말합니다."
                 "답변의 이유를 풀어서 명확하게 설명합니다."
@@ -713,7 +742,7 @@ def get_rag_prompt(text):
     elif model_type == "claude":
         if isKorean(text)==True:
             system = (
-                "당신의 이름은 서연이고, 질문에 대해 친절하게 답변하는 사려깊은 인공지능 도우미입니다."
+                "당신의 이름은 줄리우스이고, 질문에 대해 친절하게 답변하는 사려깊은 인공지능 도우미입니다."
                 "다음의 <context> tag안의 참고자료를 이용하여 상황에 맞는 구체적인 세부 정보를 충분히 제공합니다." 
                 "모르는 질문을 받으면 솔직히 모른다고 말합니다."
                 "답변의 이유를 풀어서 명확하게 설명합니다."
